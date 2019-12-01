@@ -1,5 +1,7 @@
 import random, os
+import time
 path = os.getcwd()
+
 
 WIDTH = 500
 HEIGHT = 600
@@ -13,8 +15,11 @@ class Element:
         self.x = x
         self.y = y
         self.type = t
-        self.img = loadImage(path + "/images/" + str(self.type) + ".png")
-    
+        if self.type != False:
+            self.img = loadImage(path + "/images/" + str(self.type) + ".png")
+        else:
+            self.img = None
+        
     #Fixed the pixel part: now they're all separate image files
     def display_element(self):
         image(self.img, self.x, self.y, 50, 50)
@@ -25,7 +30,7 @@ class Board(list):
         for i in range(0, NUM_ROWS):
             lst = []
             for j in range(0, NUM_COLS):
-                lst.append(Element(j*50, i*50, random.randint(0, 5)))
+                lst.append(Element(j*50, i*50, random.randint(1, 6)))
             self.append(lst)
         
     #loading images for each element    
@@ -33,9 +38,7 @@ class Board(list):
         image(loadImage(path + "/images/background.png"), 0, 0)
         for i in self:
             for j in i:
-                if j == " ":
-                    pass
-                else:
+                if j.type != False:
                     j.display_element()
 
 class Game:
@@ -86,6 +89,7 @@ class Game:
             noFill()
             strokeWeight(5)
             rect(self.selected_r*50,self.selected_c*50,50,50)
+
             
     #Function for selecting a tile through click    
     def clicked(self):
@@ -105,64 +109,74 @@ class Game:
     # Swap FUnction
     def swap(self,dir):
         if dir == RIGHT:
-            #Swaps the target and selected tile's coordinates
-            target_x = self.board[self.selected_c][self.selected_r + 1].x 
-            target_y = self.board[self.selected_c][self.selected_r + 1].y
-            self.board[self.selected_c][self.selected_r + 1].x = self.selected_tile.x
-            self.board[self.selected_c][self.selected_r + 1].y = self.selected_tile.y
-            self.board[self.selected_c][self.selected_r].x = target_x
-            self.board[self.selected_c][self.selected_r].y = target_y
-            
+            if self.is_clicked == True:
             #Swaps the target and selected tile's types
-            target_type = self.board[self.selected_c][self.selected_r + 1].type
-            self.board[self.selected_c][self.selected_r + 1].type = self.selected_tile.type
-            self.board[self.selected_c][self.selected_r].type = target_type
+                target_type = self.board[self.selected_c][self.selected_r + 1].type
+                self.board[self.selected_c][self.selected_r + 1].type = self.selected_tile.type
+                self.board[self.selected_c][self.selected_r].type = target_type
             
-            self.selected_tile = None
+            #Swaps the target and selected tile's coordinates
+                target_x = self.board[self.selected_c][self.selected_r + 1].x 
+                target_y = self.board[self.selected_c][self.selected_r + 1].y
+                self.board[self.selected_c][self.selected_r + 1].x = self.selected_tile.x
+                self.board[self.selected_c][self.selected_r + 1].y = self.selected_tile.y
+                self.board[self.selected_c][self.selected_r].x = target_x
+                self.board[self.selected_c][self.selected_r].y = target_y
+
+                self.selected_tile = None
+                self.is_clicked = False
             
-        if dir == LEFT:
-            target_x = self.board[self.selected_c][self.selected_r - 1].x 
-            target_y = self.board[self.selected_c][self.selected_r - 1].y
-            self.board[self.selected_c][self.selected_r - 1].x = self.selected_tile.x
-            self.board[self.selected_c][self.selected_r - 1].y = self.selected_tile.y
-            self.board[self.selected_c][self.selected_r].x = target_x
-            self.board[self.selected_c][self.selected_r].y = target_y
+        if dir == LEFT:    
+            if self.is_clicked == True:
+                target_type = self.board[self.selected_c][self.selected_r - 1].type
+                self.board[self.selected_c][self.selected_r - 1].type = self.selected_tile.type
+                self.board[self.selected_c][self.selected_r].type = target_type
             
-            target_type = self.board[self.selected_c][self.selected_r - 1].type
-            self.board[self.selected_c][self.selected_r - 1].type = self.selected_tile.type
-            self.board[self.selected_c][self.selected_r].type = target_type
+            #Swaps the target and selected tile's coordinates
+                target_x = self.board[self.selected_c][self.selected_r - 1].x 
+                target_y = self.board[self.selected_c][self.selected_r - 1].y
+                self.board[self.selected_c][self.selected_r - 1].x = self.selected_tile.x
+                self.board[self.selected_c][self.selected_r - 1].y = self.selected_tile.y
+                self.board[self.selected_c][self.selected_r].x = target_x
+                self.board[self.selected_c][self.selected_r].y = target_y          
             
-            self.selected_tile = None
+            
+                self.selected_tile = None
+                self.is_clicked = False
             
         if dir == UP:
-            target_x = self.board[self.selected_c - 1][self.selected_r].x 
-            target_y = self.board[self.selected_c - 1][self.selected_r].y
-            self.board[self.selected_c - 1][self.selected_r].x = self.selected_tile.x
-            self.board[self.selected_c - 1][self.selected_r].y = self.selected_tile.y
-            self.board[self.selected_c][self.selected_r].x = target_x
-            self.board[self.selected_c][self.selected_r].y = target_y
+            if self.is_clicked == True:
+                target_type = self.board[self.selected_c - 1][self.selected_r].type
+                self.board[self.selected_c - 1][self.selected_r].type = self.selected_tile.type
+                self.board[self.selected_c][self.selected_r].type = target_type
             
-            target_type = self.board[self.selected_c - 1][self.selected_r].type
-            self.board[self.selected_c - 1][self.selected_r].type = self.selected_tile.type
-            self.board[self.selected_c][self.selected_r].type = target_type
+                target_x = self.board[self.selected_c - 1][self.selected_r].x 
+                target_y = self.board[self.selected_c - 1][self.selected_r].y
+                self.board[self.selected_c - 1][self.selected_r].x = self.selected_tile.x
+                self.board[self.selected_c - 1][self.selected_r].y = self.selected_tile.y
+                self.board[self.selected_c][self.selected_r].x = target_x
+                self.board[self.selected_c][self.selected_r].y = target_y
             
-            self.selected_tile = None
+                self.selected_tile = None
+                self.is_clicked = False
             
-        if dir == DOWN:
-            target_x = self.board[self.selected_c + 1][self.selected_r].x 
-            target_y = self.board[self.selected_c + 1][self.selected_r].y
-            self.board[self.selected_c + 1][self.selected_r].x = self.selected_tile.x
-            self.board[self.selected_c + 1][self.selected_r].y = self.selected_tile.y
-            self.board[self.selected_c][self.selected_r].x = target_x
-            self.board[self.selected_c][self.selected_r].y = target_y
-                        
-            target_type = self.board[self.selected_c + 1][self.selected_r].type
-            self.board[self.selected_c + 1][self.selected_r].type = self.selected_tile.type
-            self.board[self.selected_c][self.selected_r].type = target_type
+        if dir == DOWN:        
+            if self.is_clicked == True:
+                target_type = self.board[self.selected_c + 1][self.selected_r].type
+                self.board[self.selected_c + 1][self.selected_r].type = self.selected_tile.type
+                self.board[self.selected_c][self.selected_r].type = target_type
             
-            self.selected_tile = None
-            
-            
+                target_x = self.board[self.selected_c + 1][self.selected_r].x 
+                target_y = self.board[self.selected_c + 1][self.selected_r].y
+                self.board[self.selected_c + 1][self.selected_r].x = self.selected_tile.x
+                self.board[self.selected_c + 1][self.selected_r].y = self.selected_tile.y
+                self.board[self.selected_c][self.selected_r].x = target_x
+                self.board[self.selected_c][self.selected_r].y = target_y
+           
+                self.selected_tile = None
+                self.is_clicked = False
+    
+    
     #Pop function (implementation of word search)        
     def pop_candy(self):
         directions = [[0,-1],[1,0],[0,1],[-1,0]]
@@ -172,7 +186,7 @@ class Game:
             for col in range(NUM_COLS):
                 for dir in directions:
                     cnt = 0
-                    if self.board[col][row] != " ":
+                    if self.board[col][row].type != False:
                         type = self.board[col][row].type
                         
                         #Searches the surrounding tiles to see if they are the same type
@@ -180,7 +194,7 @@ class Game:
                             r = row + dir[0]*i
                             c = col + dir[1]*i
                             if r < NUM_ROWS and c < NUM_COLS:
-                                if self.board[c][r] != " ":
+                                if self.board[c][r].type != False:
                                     
                                     if type == self.board[c][r].type:
                                         cnt += 1
@@ -188,14 +202,12 @@ class Game:
                         #Okay so here's the incomplete part: I just replaced the boards with " " so the next part is moving all the above tiles to where the " " is one by one which would be the falling
                             if cnt == 3:
                                 for j in range(3):
-                                    r = row + dir[0]*j
-                                    c = col + dir[1]*j
-                                    self.board[c][r] = " "
+                                    nr = row + dir[0]*j
+                                    nc = col + dir[1]*j
+                                    self.board[nc][nr].type = False
                     else:
                         pass
-                        
-                            
-            
+
             
 game = Game()
 
