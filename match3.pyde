@@ -15,15 +15,16 @@ class Element:
         self.x = x
         self.y = y
         self.type = t
-        if self.type != False:
-            self.img = loadImage(path + "/images/" + str(self.type) + ".png")
-        else:
-            self.img = None
-        
+        self.img = loadImage(path + "/images/" + str(self.type) + ".png")
+
     #Fixed the pixel part: now they're all separate image files
     def display_element(self):
         image(self.img, self.x, self.y, 50, 50)
-        
+
+    def update_element(self):
+        self.img = loadImage(path + "/images/" + str(self.type) + ".png")
+        image(self.img, self.x, self.y, 50, 50)
+
 class Board(list):
     #2D list initialization, I directly appended the elements as objects
     def __init__(self):
@@ -32,14 +33,19 @@ class Board(list):
             for j in range(0, NUM_COLS):
                 lst.append(Element(j*50, i*50, random.randint(1, 6)))
             self.append(lst)
-        
+
     #loading images for each element    
     def display_board(self):
         image(loadImage(path + "/images/background.png"), 0, 0)
         for i in self:
             for j in i:
-                if j.type != False:
-                    j.display_element()
+                j.display_element()
+
+    def update(self):
+        for i in self:
+            for j in i:
+                j.update_element()
+
 
 class Game:
     #I divided minutes and seconds because it makes for a really sexy clock with the 0:00 format, otherwise it would just be numbers
@@ -52,7 +58,7 @@ class Game:
         self.selected_r = None
         self.selected_c = None
         self.selected_tile = None
-        self.is_clicked = False
+        self.is_clicked = 0
 
     #the timing here is slightly off from an actual clock
     #the fill/stroke/rect is necessary to wipe the board
@@ -66,12 +72,14 @@ class Game:
             elif self.secs == 60:
                 self.secs = 0
                 self.mins += 1
-        
+
     def display_game(self):
         self.board.display_board()
         self.timer()
         self.pop_candy()
         self.gravity()
+        self.make_candy()
+        self.board.update()
         #score and time display
         fill(0, 0, 0)
         textSize(15)
@@ -83,7 +91,7 @@ class Game:
             text(str(self.mins) + ":" + seconds, 20, 550)
         elif self.secs >= 10:
             text(str(self.mins) + ":" + str(self.secs), 20, 550)
-            
+
         #Continually prints the selected tile rectangle    
         if self.is_clicked == True:
             stroke(0,255,0)
@@ -91,22 +99,23 @@ class Game:
             strokeWeight(5)
             rect(self.selected_r*50,self.selected_c*50,50,50)
 
-            
+
     #Function for selecting a tile through click    
     def clicked(self):
         c = mouseY // 50
         r = mouseX // 50
-        
+
         stroke(0, 255, 0)
         noFill()
         strokeWeight(5)
         rect(r*50,c*50,50,50)
         self.selected_r = r
         self.selected_c = c
-        
+
         self.is_clicked = True
         self.selected_tile = self.board[self.selected_c][self.selected_r]
-               
+        print(self.selected_tile.type)
+
     # Swap Function
     def swap(self,dir):
         if dir == RIGHT:
@@ -122,9 +131,11 @@ class Game:
                 self.board[self.selected_c][self.selected_r + 1] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
 
+                self.board.update()
+
                 self.selected_tile = None
-                self.is_clicked = False
-            
+                self.is_clicked = 0
+
         if dir == LEFT:    
             if self.is_clicked == True:
                 target_x = self.board[self.selected_c][self.selected_r - 1].x 
@@ -136,10 +147,12 @@ class Game:
                 temp = self.board[self.selected_c][self.selected_r - 1]
                 self.board[self.selected_c][self.selected_r - 1] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
-            
+
+                self.board.update()
+
                 self.selected_tile = None
-                self.is_clicked = False
-            
+                self.is_clicked = 0
+
         if dir == UP:
             if self.is_clicked == True:
                 target_x = self.board[self.selected_c - 1][self.selected_r].x 
@@ -151,10 +164,12 @@ class Game:
                 temp = self.board[self.selected_c - 1][self.selected_r]
                 self.board[self.selected_c - 1][self.selected_r] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
-            
+
+                self.board.update()
+
                 self.selected_tile = None
-                self.is_clicked = False
-            
+                self.is_clicked = 0
+
         if dir == DOWN:        
             if self.is_clicked == True:
                 target_x = self.board[self.selected_c + 1][self.selected_r].x 
@@ -166,60 +181,69 @@ class Game:
                 temp = self.board[self.selected_c + 1][self.selected_r]
                 self.board[self.selected_c + 1][self.selected_r] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
-           
+
+                self.board.update()
+
                 self.selected_tile = None
-                self.is_clicked = False
-    
-    
+                self.is_clicked = 0
+
+
     #Pop function (implementation of word search)        
     def pop_candy(self):
         directions = [[0,-1],[1,0],[0,1],[-1,0]]
-            
+
         #Goes through every section of the board    
         for row in range(NUM_ROWS):
             for col in range(NUM_COLS):
                 for dir in directions:
                     cnt = 0
-                    if self.board[col][row].type != False:
+                    if self.board[col][row].type != 0:
                         type = self.board[col][row].type
-                        
+
                         #Searches the surrounding tiles to see if they are the same type
                         for i in range(3):
                             r = row + dir[0]*i
                             c = col + dir[1]*i
                             if r < NUM_ROWS and r >= 0 and c < NUM_COLS and c >= 0:
-                                if self.board[c][r].type != False:
+                                if self.board[c][r].type != 0:
                                     if type == self.board[c][r].type:
                                         cnt += 1
-                                        
-                        #Okay so here's the incomplete part: I just replaced the boards with False so the next part is moving all the above tiles to where the False is one by one which would be the falling
+
+                        #Okay so here's the incomplete part: I just replaced the boards with 0 so the next part is moving all the above tiles to where the 0 is one by one which would be the falling
                             if cnt == 3:
                                 for j in range(3):
                                     nr = row + dir[0]*j
                                     nc = col + dir[1]*j
-                                    self.board[nc][nr].type = False
+                                    self.board[nc][nr].type = 0
+
                     else:
                         pass
 
     #Gravity function
-    #currently problematic because it makes the candies at the top pop rather than popping and then moving down
     def gravity(self):
-        for r in range(NUM_ROWS - 1, 0, -1):
+        for r in range(NUM_ROWS - 1, -1, -1):
             for c in range(NUM_COLS):
-                if self.board[r][c].type == False:
+                if self.board[r][c].type == 0:
                     self.board[r][c].type = self.board[r - 1][c].type
-                    self.board[r - 1][c].type = False
-                    
+                    self.board[r - 1][c].type = 0
+    
+    #candy generation function
+    def make_candy(self):
+        for r in range(NUM_ROWS - 1, -1, -1):
+            for c in range(NUM_COLS):
+                if self.board[r][c].type == 0:
+                    self.board[r][c].type = random.randint(1,6)
+
 game = Game()
 
 #I hard coded the dimensions because given we're loading images all over the place any attempt to change them will mess them up bad anyway
 def setup():
     size(500, 600)
     background(255, 255, 255)
-    
+
 def draw():
     game.display_game()
-    
+
 def mouseClicked():
     game.clicked()
 
