@@ -52,30 +52,39 @@ class Game:
     def __init__(self):
         self.board = Board()
         self.score = 0
-        self.mins = 0
-        self.secs = 0
+        self.required_score = 10
+        self.secs = 59
         #Added couple of new attirbutes for checking whether a tile is clicked and where the clicked tile is
         self.selected_r = None
         self.selected_c = None
         self.selected_tile = None
         self.is_clicked = 0
+        self.lost = False
 
     #the timing here is slightly off from an actual clock
     #the fill/stroke/rect is necessary to wipe the board
     def timer(self):
-        if frameCount%50 == 0:
+        if frameCount%2 == 0:
             fill(255, 255, 255)
             stroke(255, 255, 255)
             rect(0, 500, 500, 100)
-            if self.secs < 60:
-                self.secs += 1
-            elif self.secs == 60:
-                self.secs = 0
-                self.mins += 1
+            self.secs -= 1
 
     def display_game(self):
         self.board.display_board()
         self.timer()
+        if self.secs == 0:
+            self.game_over_check()
+        if self.lost == True:
+            fill(255, 255, 255)
+            stroke(255, 255, 255)
+            rect(0, 0, 500, 600)
+            fill(0, 0, 0)
+            textSize(50)
+            text("You lost!", 150, 250)
+            textSize(20)
+            text("You did not make the required number \nof matches :(", 60, 300)
+            return
         self.pop_candy()
         self.gravity()
         self.make_candy()
@@ -84,13 +93,14 @@ class Game:
         fill(0, 0, 0)
         textSize(15)
         text("Score: " + str(self.score), 420, 530)
+        text("Goal: " + str(self.required_score), 420, 560)
         textSize(30)
         #more engineering for the sexy clock format
         if self.secs < 10:
             seconds = '0' + str(self.secs)
-            text(str(self.mins) + ":" + seconds, 20, 550)
+            text("0:" + seconds, 20, 550)
         elif self.secs >= 10:
-            text(str(self.mins) + ":" + str(self.secs), 20, 550)
+            text("0:" + str(self.secs), 20, 550)
 
         #Continually prints the selected tile rectangle    
         if self.is_clicked == True:
@@ -215,6 +225,7 @@ class Game:
                                     nr = row + dir[0]*j
                                     nc = col + dir[1]*j
                                     self.board[nc][nr].type = 0
+                                self.score += 1
 
                     else:
                         pass
@@ -234,6 +245,15 @@ class Game:
                 if self.board[r][c].type == 0:
                     self.board[r][c].type = random.randint(1,6)
 
+    #game win/lose checking function
+    def game_over_check(self):
+        if self.score >= self.required_score:
+            self.score = 0
+            self.required_score += 5
+            self.secs = 59
+        elif self.score < self.required_score:
+            self.lost = True
+        
 game = Game()
 
 #I hard coded the dimensions because given we're loading images all over the place any attempt to change them will mess them up bad anyway
