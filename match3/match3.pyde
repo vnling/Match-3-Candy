@@ -61,6 +61,8 @@ class Game:
         self.selected_tile = None
         self.is_clicked = 0
         self.lost = False
+        self.swap_state = False
+        self.valid_swap = False
         
         # Music Part
         self.background_music = player.loadFile(path + "/sounds/background.mp3")
@@ -79,6 +81,7 @@ class Game:
     def display_game(self):
         self.board.display_board()
         self.timer()
+        print(self.swap_state, self.valid_swap)
         if self.secs == 0:
             self.game_over_check()
         if self.lost == True:
@@ -128,12 +131,14 @@ class Game:
         rect(r*50,c*50,50,50)
         self.selected_r = r
         self.selected_c = c
+        self.valid_swap = False
 
         self.is_clicked = True
         self.selected_tile = self.board[self.selected_c][self.selected_r]
 
     # Swap Function
     def swap(self,dir):
+        self.swap_state = True
         if dir == RIGHT:
             if self.is_clicked == True:
             #Swaps the target and selected tile
@@ -142,12 +147,26 @@ class Game:
                 self.board[self.selected_c][self.selected_r + 1].x = self.selected_tile.x
                 self.board[self.selected_c][self.selected_r + 1].y = self.selected_tile.y
                 self.board[self.selected_c][self.selected_r].x = target_x
-                self.board[self.selected_c][self.selected_r].y = target_y          
+                self.board[self.selected_c][self.selected_r].y = target_y    
+                      
                 temp = self.board[self.selected_c][self.selected_r + 1]
                 self.board[self.selected_c][self.selected_r + 1] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
 
+                self.pop_candy()
                 self.board.update()
+                
+                if self.valid_swap == False:
+                    target_x = self.board[self.selected_c][self.selected_r].x 
+                    target_y = self.board[self.selected_c][self.selected_r].y
+                    self.board[self.selected_c][self.selected_r].x = self.board[self.selected_c][self.selected_r + 1].x 
+                    self.board[self.selected_c][self.selected_r].y = self.board[self.selected_c][self.selected_r + 1].y
+                    self.board[self.selected_c][self.selected_r + 1].x = target_x
+                    self.board[self.selected_c][self.selected_r + 1].y = target_y
+                    self.board[self.selected_c][self.selected_r] = self.board[self.selected_c][self.selected_r + 1]
+                    self.board[self.selected_c][self.selected_r + 1] = temp
+                    
+                    self.board.update()
 
                 self.selected_tile = None
                 self.is_clicked = 0
@@ -159,29 +178,59 @@ class Game:
                 self.board[self.selected_c][self.selected_r - 1].x = self.selected_tile.x
                 self.board[self.selected_c][self.selected_r - 1].y = self.selected_tile.y
                 self.board[self.selected_c][self.selected_r].x = target_x
-                self.board[self.selected_c][self.selected_r].y = target_y          
+                self.board[self.selected_c][self.selected_r].y = target_y  
+                        
                 temp = self.board[self.selected_c][self.selected_r - 1]
                 self.board[self.selected_c][self.selected_r - 1] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
 
+                self.pop_candy()
                 self.board.update()
+                
+                if self.valid_swap == False:
+                    target_x = self.board[self.selected_c][self.selected_r].x 
+                    target_y = self.board[self.selected_c][self.selected_r].y
+                    self.board[self.selected_c][self.selected_r].x = self.board[self.selected_c][self.selected_r - 1].x 
+                    self.board[self.selected_c][self.selected_r].y = self.board[self.selected_c][self.selected_r - 1].y
+                    self.board[self.selected_c][self.selected_r - 1].x = target_x
+                    self.board[self.selected_c][self.selected_r - 1].y = target_y
+                    self.board[self.selected_c][self.selected_r] = self.board[self.selected_c][self.selected_r - 1]
+                    self.board[self.selected_c][self.selected_r - 1] = temp
+                    
+                    self.board.update()
 
                 self.selected_tile = None
                 self.is_clicked = 0
 
         if dir == UP:
             if self.is_clicked == True:
+                
                 target_x = self.board[self.selected_c - 1][self.selected_r].x 
                 target_y = self.board[self.selected_c - 1][self.selected_r].y
                 self.board[self.selected_c - 1][self.selected_r].x = self.selected_tile.x
                 self.board[self.selected_c - 1][self.selected_r].y = self.selected_tile.y
                 self.board[self.selected_c][self.selected_r].x = target_x
-                self.board[self.selected_c][self.selected_r].y = target_y          
+                self.board[self.selected_c][self.selected_r].y = target_y
+                          
                 temp = self.board[self.selected_c - 1][self.selected_r]
                 self.board[self.selected_c - 1][self.selected_r] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
-
+                
+                self.pop_candy()
                 self.board.update()
+                
+                if self.valid_swap == False:
+                    target_x = self.board[self.selected_c][self.selected_r].x 
+                    target_y = self.board[self.selected_c][self.selected_r].y
+                    self.board[self.selected_c][self.selected_r].x = self.board[self.selected_c - 1][self.selected_r].x 
+                    self.board[self.selected_c][self.selected_r].y = self.board[self.selected_c - 1][self.selected_r].y
+                    self.board[self.selected_c - 1][self.selected_r].x = target_x
+                    self.board[self.selected_c - 1][self.selected_r].y = target_y
+                    self.board[self.selected_c][self.selected_r] = self.board[self.selected_c - 1][self.selected_r]
+                    self.board[self.selected_c - 1][self.selected_r] = temp
+                    
+                    self.board.update()
+                    
 
                 self.selected_tile = None
                 self.is_clicked = 0
@@ -194,11 +243,25 @@ class Game:
                 self.board[self.selected_c + 1][self.selected_r].y = self.selected_tile.y
                 self.board[self.selected_c][self.selected_r].x = target_x
                 self.board[self.selected_c][self.selected_r].y = target_y          
+                
                 temp = self.board[self.selected_c + 1][self.selected_r]
                 self.board[self.selected_c + 1][self.selected_r] = self.board[self.selected_c][self.selected_r]
                 self.board[self.selected_c][self.selected_r] = temp
 
+                self.pop_candy()
                 self.board.update()
+                
+                if self.valid_swap == False:
+                    target_x = self.board[self.selected_c][self.selected_r].x 
+                    target_y = self.board[self.selected_c][self.selected_r].y
+                    self.board[self.selected_c][self.selected_r].x = self.board[self.selected_c + 1][self.selected_r].x 
+                    self.board[self.selected_c][self.selected_r].y = self.board[self.selected_c + 1][self.selected_r].y
+                    self.board[self.selected_c + 1][self.selected_r].x = target_x
+                    self.board[self.selected_c + 1][self.selected_r].y = target_y
+                    self.board[self.selected_c][self.selected_r] = self.board[self.selected_c + 1][self.selected_r]
+                    self.board[self.selected_c + 1][self.selected_r] = temp
+                    
+                    self.board.update()
 
                 self.selected_tile = None
                 self.is_clicked = 0
@@ -225,13 +288,13 @@ class Game:
                                     if type == self.board[c][r].type:
                                         cnt += 1
 
-                        #Okay so here's the incomplete part: I just replaced the boards with 0 so the next part is moving all the above tiles to where the 0 is one by one which would be the falling
                             if cnt == 3:
                                 for j in range(3):
                                     nr = row + dir[0]*j
                                     nc = col + dir[1]*j
                                     self.board[nc][nr].type = 0
                                 self.score += 1
+                                self.valid_swap = True
 
                     else:
                         pass
