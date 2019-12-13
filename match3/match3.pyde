@@ -46,6 +46,14 @@ class Board(list):
         for i in self:
             for j in i:
                 j.update_element()
+    
+    def reset_board(self):
+        self = []
+        for i in range(0, NUM_ROWS):
+            lst = []
+            for j in range(0, NUM_COLS):
+                lst.append(Element(j*50, i*50, random.randint(1, 6)))
+            self.append(lst)
 
 
 class Game:
@@ -53,7 +61,7 @@ class Game:
     def __init__(self):
         self.board = Board()
         self.score = 0
-        self.required_score = 10
+        self.required_score = 20
         self.secs = 59
         #Added couple of new attirbutes for checking whether a tile is clicked and where the clicked tile is
         self.selected_r = None
@@ -63,27 +71,32 @@ class Game:
         self.lost = False
         self.swap_state = False
         self.valid_swap = False
+        self.next_level = False
         
         # Music Part
         self.background_music = player.loadFile(path + "/sounds/background.mp3")
         self.background_music.rewind()
         self.background_music.play()
+        self.background_music.loop()
+        self.pop_sound = player.loadFile(path + "/sounds/pop_sound.mp3")
+        self.wrong_sound = player.loadFile(path + "/sounds/wrong_match.mp3")
 
     #the timing here is slightly off from an actual clock
     #the fill/stroke/rect is necessary to wipe the board
     def timer(self):
-        if frameCount%2 == 0:
+        if frameCount % 12 == 0:
             fill(255, 255, 255)
             stroke(255, 255, 255)
             rect(0, 500, 500, 100)
-            self.secs -= 1
+            if not self.next_level:
+                self.secs -= 1
 
     def display_game(self):
         self.board.display_board()
         self.timer()
-        print(self.swap_state, self.valid_swap)
         if self.secs == 0:
             self.game_over_check()
+        
         if self.lost == True:
             fill(255, 255, 255)
             stroke(255, 255, 255)
@@ -95,6 +108,18 @@ class Game:
             text("You did not make the required number \nof matches :(", 60, 300)
             self.background_music.rewind()
             return
+                
+        elif self.next_level == True:
+            fill(255, 255, 255)
+            stroke(255, 255, 255)
+            rect(0, 0, 500, 600)
+            fill(0, 0, 0)
+            textSize(30)
+            text("Congratulations!", 125, 250)
+            textSize(20)
+            text("Click to advance to the next level :)", 75, 300)
+            return
+        
         self.pop_candy()
         self.gravity()
         self.make_candy()
@@ -122,19 +147,34 @@ class Game:
 
     #Function for selecting a tile through click    
     def clicked(self):
-        c = mouseY // 50
-        r = mouseX // 50
-
-        stroke(0, 255, 0)
-        noFill()
-        strokeWeight(5)
-        rect(r*50,c*50,50,50)
-        self.selected_r = r
-        self.selected_c = c
-        self.valid_swap = False
-
-        self.is_clicked = True
-        self.selected_tile = self.board[self.selected_c][self.selected_r]
+        if self.lost == False and self.next_level == False:
+            
+            if mouseY < 500:
+                c = mouseY // 50
+                r = mouseX // 50
+            
+                stroke(0, 255, 0)
+                noFill()
+                strokeWeight(5)
+                rect(r*50,c*50,50,50)
+                self.selected_r = r
+                self.selected_c = c
+                self.valid_swap = False
+            
+                self.is_clicked = True
+                self.selected_tile = self.board[self.selected_c][self.selected_r]
+        elif self.lost == True:
+            self.reset()
+        elif self.next_level == True:
+            self.next_level = False
+            
+    
+    def reset(self):
+        self.board.reset_board()
+        self.required_score = 20
+        self.score = 0
+        self.secs = 59
+        self.lost = False
 
     # Swap Function
     def swap(self,dir):
@@ -166,6 +206,9 @@ class Game:
                     self.board[self.selected_c][self.selected_r] = self.board[self.selected_c][self.selected_r + 1]
                     self.board[self.selected_c][self.selected_r + 1] = temp
                     
+                    self.wrong_sound.rewind()
+                    self.wrong_sound.play()
+                    
                     self.board.update()
 
                 self.selected_tile = None
@@ -196,6 +239,9 @@ class Game:
                     self.board[self.selected_c][self.selected_r - 1].y = target_y
                     self.board[self.selected_c][self.selected_r] = self.board[self.selected_c][self.selected_r - 1]
                     self.board[self.selected_c][self.selected_r - 1] = temp
+                    
+                    self.wrong_sound.rewind()
+                    self.wrong_sound.play()
                     
                     self.board.update()
 
@@ -229,6 +275,9 @@ class Game:
                     self.board[self.selected_c][self.selected_r] = self.board[self.selected_c - 1][self.selected_r]
                     self.board[self.selected_c - 1][self.selected_r] = temp
                     
+                    self.wrong_sound.rewind()
+                    self.wrong_sound.play()
+                    
                     self.board.update()
                     
 
@@ -260,6 +309,9 @@ class Game:
                     self.board[self.selected_c + 1][self.selected_r].y = target_y
                     self.board[self.selected_c][self.selected_r] = self.board[self.selected_c + 1][self.selected_r]
                     self.board[self.selected_c + 1][self.selected_r] = temp
+                    
+                    self.wrong_sound.rewind()
+                    self.wrong_sound.play()
                     
                     self.board.update()
 
@@ -295,6 +347,8 @@ class Game:
                                     self.board[nc][nr].type = 0
                                 self.score += 1
                                 self.valid_swap = True
+                                self.pop_sound.rewind()
+                                self.pop_sound.play()
 
                     else:
                         pass
@@ -317,9 +371,10 @@ class Game:
     #game win/lose checking function
     def game_over_check(self):
         if self.score >= self.required_score:
+            self.next_level = True
             self.score = 0
-            self.required_score += 5
             self.secs = 59
+            self.required_score += 5
         elif self.score < self.required_score:
             self.lost = True
         
