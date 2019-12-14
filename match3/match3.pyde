@@ -106,6 +106,7 @@ class Game:
             text("You lost!", 150, 250)
             textSize(20)
             text("You did not make the required number \nof matches :(", 60, 300)
+            text("Click to restart.", 60, 360)
             self.background_music.rewind()
             return
                 
